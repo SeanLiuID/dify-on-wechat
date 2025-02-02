@@ -112,8 +112,29 @@ class GeWeChatChannel(ChatChannel):
             ats = ""
             if gewechat_message and gewechat_message.is_group:
                 ats = gewechat_message.actual_user_id
-            self.client.post_text(self.app_id, receiver, reply_text, ats)
-            logger.info("[gewechat] Do send text to {}: {}".format(receiver, reply_text))
+
+            # 按 //n 分割消息
+            messages = reply_text.split("//n")
+            messages = [msg.strip() for msg in messages if msg.strip()]
+            
+            # 分段发送
+            for i, msg in enumerate(messages):
+                try:
+                    # 只在第一段添加@信息
+                    if i == 0:
+                        self.client.post_text(self.app_id, receiver, msg, ats)
+                    else:
+                        self.client.post_text(self.app_id, receiver, msg, "")
+                        
+                    logger.info(f"[gewechat] Send message part {i+1}/{len(messages)}: {msg}")
+                    
+                    # 添加发送间隔，避免消息发送太快
+                    if i < len(messages) - 1:
+                        time.sleep(0.5)
+                        
+                except Exception as e:
+                    logger.error(f"[gewechat] Failed to send message: {str(e)}")
+                    continue
         elif reply.type == ReplyType.VOICE:
             try:
                 content = reply.content
