@@ -21,6 +21,7 @@ plugins/**/
 !plugins/finish
 !plugins/godcmd
 !plugins/tool
+!plugins/message_monitor
 !plugins/banwords
 !plugins/banwords/**/
 plugins/banwords/__pycache__
