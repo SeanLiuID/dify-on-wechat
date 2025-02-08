@@ -29,7 +29,7 @@ class DifyBot(Bot):
 
     def reply(self, query, context: Context=None):
         # acquire reply content
-        if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:
+        if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE or context.type == ContextType.CUSTOMERIZE_MSG:
             if context.type == ContextType.IMAGE_CREATE:
                 query = conf().get('image_create_prefix', ['画'])[0] + query
             logger.info("[DIFY] query={}".format(query))

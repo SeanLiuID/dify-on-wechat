@@ -9,6 +9,7 @@ from config import conf
 from lib.gewechat import GewechatClient
 import requests
 import xml.etree.ElementTree as ET
+from common import message_parser
 
 # 私聊信息示例
 """
@@ -347,6 +348,7 @@ class GeWeChatMessage(ChatMessage):
             self.ctype = ContextType.IMAGE
             self.content = TmpDir().path() + str(self.msg_id) + ".png"
             self._prepare_fn = self.download_image
+            self.prepare()
         elif msg_type == 49:  # 引用消息，小程序，公众号等
             # After getting content_xml
             content_xml = msg['Data']['Content']['string']
@@ -384,7 +386,9 @@ class GeWeChatMessage(ChatMessage):
 
                 else:  # 其他消息类型，暂时不解析，直接返回XML
                     self.ctype = ContextType.TEXT
-                    self.content = content_xml
+                    # 解析XML
+                    content_json = message_parser.to_json_str(content_xml)
+                    self.content = content_json
             else:
                 self.ctype = ContextType.TEXT
                 self.content = content_xml

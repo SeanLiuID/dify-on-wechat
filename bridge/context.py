@@ -20,6 +20,7 @@ class ContextType(Enum):
 
     NON_USER_MSG = 30  # 来自公众号、腾讯游戏、微信团队等非用户账号的消息
     STATUS_SYNC  = 51   # 微信客户端的状态同步消息，可以忽略 eggs: 打开/退出某个聊天窗口
+    CUSTOMERIZE_MSG = 9999
 
 
     def __str__(self):
