@@ -10,6 +10,7 @@ from lib.gewechat import GewechatClient
 import requests
 import xml.etree.ElementTree as ET
 from common import message_parser
+import json
 
 # 私聊信息示例
 """
@@ -383,12 +384,17 @@ class GeWeChatMessage(ChatMessage):
                         self.ctype = ContextType.SHARING
                         url = appmsg.find('url').text if appmsg.find('url') is not None else ""
                         self.content = url
-
+                # elif msg_type is not None and msg_type.text == '6': # 分享文件
+                #     self.ctype = ContextType.FILE
+                #     content_json = json.loads(message_parser.to_json_str(content_xml))
+                #     self.content = TmpDir().path() + str(content_json['msg']['appmsg']['title'])
+                #     self._prepare_fn = self.download_file
+                #     self.prepare()
                 else:  # 其他消息类型，暂时不解析，直接返回XML
                     self.ctype = ContextType.TEXT
                     # 解析XML
-                    content_json = message_parser.to_json_str(content_xml)
-                    self.content = content_json
+                    # content_json = message_parser.to_json_str(content_xml)
+                    self.content = content_xml
             else:
                 self.ctype = ContextType.TEXT
                 self.content = content_xml
@@ -574,6 +580,44 @@ class GeWeChatMessage(ChatMessage):
                 logger.error(f"[gewechat] Failed to download image file: {image_info}")
         except Exception as e:
             logger.error(f"[gewechat] Failed to download image file: {e}")
+
+    # 下载文件（通过cdn download接口，但是因为收费无法调用，返回404）
+    def download_file(self):
+        try:
+            try:
+                # 尝试下载高清图片
+                content_xml = self.msg['Data']['Content']['string']
+                # Find the position of '<?xml' declaration and remove any prefix
+                xml_start = content_xml.find('<?xml version=')
+                if xml_start != -1:
+                    content_xml = content_xml[xml_start:]
+                root = ET.fromstring(content_xml)
+                appmsg = root.find('appmsg')
+                appattach = appmsg.find('appattach')
+                totallen = int(appattach.find('totallen').text)
+                cdnattachurl = appattach.find('cdnattachurl').text
+                aeskey = appattach.find('aeskey').text
+                fileext = appattach.find('fileext').text
+
+                file_info = self.client.download_cdn(app_id=self.app_id, aes_key=aeskey, file_id=cdnattachurl, type=5, total_size=totallen, suffix=fileext)
+            except Exception as e:
+                logger.warning(f"[gewechat] Failed to download cdn file: {e}")
+            if file_info['ret'] == 200 and file_info['data']:
+                file_url = file_info['data']['fileUrl']
+                logger.info(f"[gewechat] Download file from {file_url}")
+                download_url = conf().get("gewechat_download_url").rstrip('/')
+                full_url = download_url + '/' + file_url
+                try:
+                    file_data = requests.get(full_url).content
+                except Exception as e:
+                    logger.error(f"[gewechat] Failed to download cdn file: {e}")
+                    return
+                with open(self.content, "wb") as f:
+                    f.write(file_data)
+            else:
+                logger.error(f"[gewechat] Failed to download cdn file: {file_info}")
+        except Exception as e:
+            logger.error(f"[gewechat] Failed to download cdn file: {e}")
 
     def prepare(self):
         if self._prepare_fn:
