@@ -408,8 +408,7 @@ class GeWeChatMessage(ChatMessage):
         elif msg_type == 43:
             # 视频消息
             self.ctype = ContextType.VIDEO
-            self.content = msg['Data']['Content']['string']
-            return
+            self.content = content_xml
         elif msg_type == 10002:  # Group System Message
             if self.is_group:
                 content = msg['Data']['Content']['string']
