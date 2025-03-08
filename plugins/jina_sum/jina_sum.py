@@ -72,14 +72,16 @@ class JinaSum(Plugin):
             target_url = html.unescape(content) # 解决公众号卡片链接校验问题，参考 https://github.com/fatwang2/sum4all/commit/b983c49473fc55f13ba2c44e4d8b226db3517c45
             jina_url = self.jina_reader_base + '/'
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            }
+            jina_headers = {
                 "Authorization": "Bearer jina_d83d51e68cd941dd83ea98689d4dc54f4QoxRHQcXkanZSF4M67F5G7vQKhr",
                 "Content-Type": "application/json"
             }
             data = {
                 "url": target_url
             }
-            response = requests.post(jina_url, headers=headers, data=json.dumps(data), timeout=60)
+            response = requests.post(jina_url, headers=jina_headers, data=json.dumps(data), timeout=60)
             response.raise_for_status()
             target_url_content = response.text
 
