@@ -70,9 +70,12 @@ class JinaSum(Plugin):
                 channel.send(reply, context)
 
             target_url = html.unescape(content) # 解决公众号卡片链接校验问题，参考 https://github.com/fatwang2/sum4all/commit/b983c49473fc55f13ba2c44e4d8b226db3517c45
-            jina_url = self._get_jina_url(target_url)
+            jina_url = self.jina_reader_base + '/'
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"}
-            response = requests.get(jina_url, headers=headers, timeout=60)
+            data = {
+                "url": target_url
+            }
+            response = requests.post(jina_url, headers=headers, data=json.dumps(data), timeout=60)
             response.raise_for_status()
             target_url_content = response.text
 
@@ -117,7 +120,7 @@ class JinaSum(Plugin):
 
     def _get_openai_chat_url(self):
         return self.open_ai_api_base + "/chat/completions"
-
+ 
     def _get_openai_headers(self):
         return {
             'Authorization': f"Bearer {self.open_ai_api_key}",
